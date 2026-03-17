@@ -10,7 +10,6 @@ from utils.logger import get_logger
 
 # Load API key
 load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
 
 logger = get_logger("app")
 
@@ -19,86 +18,61 @@ def ask_gemini(prompt, api_key):
     try:
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-1.5-flash",
             contents=prompt
         )
         return response.text
     except Exception as e:
         logger.error(f"Gemini API error: {e}")
-        return None
+        raise Exception(f"Gemini API error: {str(e)}")
 
-def run_pipeline(csv_path, user_query, api_key):
+def run_pipeline(csv_path, user_query, api_key, status_callback=None):
     """Run the complete agent pipeline"""
-    
-    print("\n" + "="*50)
-    print("AutoGen Data Analyzer GPT")
-    print("="*50)
-    
-    # Step 1 - Load CSV
-    print("\nStep 1: Loading CSV file...")
+
+    def update_status(message):
+        if status_callback:
+            status_callback(message)
+        print(message)
+
+    update_status("Step 1 of 7: Loading CSV file...")
     df = load_csv(csv_path)
     if df is None:
-        print("Error loading CSV file!")
-        return None, None
-    
-    # Step 2 - Clean Data
-    print("Step 2: Cleaning data...")
+        raise Exception("Error loading CSV file!")
+
+    update_status("Step 2 of 7: Cleaning data...")
     df = clean_data(df)
     df.to_csv("uploaded_file.csv", index=False)
-    
-    # Step 3 - Get Data Info
-    print("Step 3: Analyzing data structure...")
+
+    update_status("Step 3 of 7: Analyzing data structure...")
     data_info = get_data_info(df)
-    print(f"Data loaded: {data_info['rows']} rows, {data_info['columns']} columns")
-    print(f"Columns: {data_info['column_names']}")
-    
-    # Step 4 - Planner Agent
-    print("\nStep 4: Planner Agent creating analysis plan...")
+
+    update_status("Step 4 of 7: Planner Agent creating analysis plan...")
     planner_prompt = get_planner_prompt(user_query, data_info)
     plan = ask_gemini(planner_prompt, api_key)
     if plan is None:
-        print("Planner Agent failed!")
-        return None, None
-    print(f"Plan created!\n{plan}")
-    
-    # Step 5 - Coder Agent
-    print("\nStep 5: Coder Agent writing Python code...")
+        raise Exception("Planner Agent failed!")
+
+    update_status("Step 5 of 7: Coder Agent writing Python code...")
     coder_prompt = get_coder_prompt(user_query, data_info, plan)
     code = ask_gemini(coder_prompt, api_key)
     if code is None:
-        print("Coder Agent failed!")
-        return None, None
-    
+        raise Exception("Coder Agent failed!")
+
     # Clean code
     code = code.replace("```python", "").replace("```", "").strip()
-    print("Code generated successfully!")
-    
-    # Step 6 - Executor Agent
-    print("\nStep 6: Executor Agent running the code...")
+
+    update_status("Step 6 of 7: Executor Agent running the code...")
     result = save_and_run_code(code)
     if not result["success"]:
-        print(f"Execution failed: {result['error']}")
-        return None, None
-    print("Code executed successfully!")
-    print(f"Output:\n{result['output']}")
-    
-    # Step 7 - Analyst Agent
-    print("\nStep 7: Analyst Agent preparing insights...")
+        raise Exception(f"Code execution failed: {result['error']}")
+
+    update_status("Step 7 of 7: Analyst Agent preparing insights...")
     analyst_prompt = get_analyst_prompt(user_query, result["output"], data_info)
     analysis = ask_gemini(analyst_prompt, api_key)
     if analysis is None:
-        print("Analyst Agent failed!")
-        return None, None
-    
-    print("\n" + "="*50)
-    print("FINAL ANALYSIS")
-    print("="*50)
-    print(analysis)
-    
-    if os.path.exists("charts/result.png"):
-        print("\nChart saved to: charts/result.png")
-    
-    print("\nPipeline completed successfully!")
+        raise Exception("Analyst Agent failed!")
+
+    logger.info("Pipeline completed successfully!")
     return analysis, data_info
 
 # Test run
