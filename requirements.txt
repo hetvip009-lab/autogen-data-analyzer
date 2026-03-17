@@ -1,0 +1,6 @@
+google-genai
+python-dotenv
+pyautogen
+matplotlib
+pandas
+streamlit
