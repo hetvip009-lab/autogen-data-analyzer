@@ -65,12 +65,6 @@ with st.sidebar:
     st.markdown("4. Click Analyze button")
     st.markdown("5. View results and charts")
 
-    st.markdown("---")
-    st.markdown("### About")
-    st.markdown("Built by Patel Hetvi Prafulbhai")
-    st.markdown("GSFC University | Data Science")
-    st.markdown("Enrollment: 25MSC04005")
-
 # Tabs
 tab1, tab2, tab3 = st.tabs(["Analysis", "Data Explorer", "About"])
 
@@ -235,7 +229,7 @@ with tab3:
     st.markdown("""
     ### AutoGen Data Analyzer GPT
 
-    AutoGen Data Analyzer GPT is an AI-powered data analysis system 
+    AutoGen Data Analyzer GPT is an AI-powered data analysis system
     built using Microsoft's AutoGen framework and Google Gemini API.
 
     ### How It Works
@@ -259,13 +253,6 @@ with tab3:
     - Matplotlib
     - Docker
     - Git/GitHub
-
-    ### Developer
-
-    - **Name:** Patel Hetvi Prafulbhai
-    - **Enrollment:** 25MSC04005
-    - **University:** GSFC University
-    - **Department:** Data Science
     """)
 
 # Footer
