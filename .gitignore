@@ -1,0 +1,27 @@
+# Virtual environment
+myenv/
+venv/
+
+# API keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+logs/
+
+# Charts
+charts/
+
+# Temporary files
+temp_code.py
+uploaded_file.csv
+
+# VS Code
+.vscode/
+
+# Distribution
+.dist/
