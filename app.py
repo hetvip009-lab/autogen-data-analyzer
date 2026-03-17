@@ -12,14 +12,12 @@ from utils.logger import get_logger
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
-# Configure Gemini
-client = genai.Client(api_key=api_key)
-
 logger = get_logger("app")
 
-def ask_gemini(prompt):
+def ask_gemini(prompt, api_key):
     """Send prompt to Gemini and get response"""
     try:
+        client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
@@ -29,7 +27,7 @@ def ask_gemini(prompt):
         logger.error(f"Gemini API error: {e}")
         return None
 
-def run_pipeline(csv_path, user_query):
+def run_pipeline(csv_path, user_query, api_key):
     """Run the complete agent pipeline"""
     
     print("\n" + "="*50)
@@ -41,7 +39,7 @@ def run_pipeline(csv_path, user_query):
     df = load_csv(csv_path)
     if df is None:
         print("Error loading CSV file!")
-        return
+        return None, None
     
     # Step 2 - Clean Data
     print("Step 2: Cleaning data...")
@@ -57,21 +55,21 @@ def run_pipeline(csv_path, user_query):
     # Step 4 - Planner Agent
     print("\nStep 4: Planner Agent creating analysis plan...")
     planner_prompt = get_planner_prompt(user_query, data_info)
-    plan = ask_gemini(planner_prompt)
+    plan = ask_gemini(planner_prompt, api_key)
     if plan is None:
         print("Planner Agent failed!")
-        return
+        return None, None
     print(f"Plan created!\n{plan}")
     
     # Step 5 - Coder Agent
     print("\nStep 5: Coder Agent writing Python code...")
     coder_prompt = get_coder_prompt(user_query, data_info, plan)
-    code = ask_gemini(coder_prompt)
+    code = ask_gemini(coder_prompt, api_key)
     if code is None:
         print("Coder Agent failed!")
-        return
+        return None, None
     
-    # Clean code (remove markdown if any)
+    # Clean code
     code = code.replace("```python", "").replace("```", "").strip()
     print("Code generated successfully!")
     
@@ -80,32 +78,32 @@ def run_pipeline(csv_path, user_query):
     result = save_and_run_code(code)
     if not result["success"]:
         print(f"Execution failed: {result['error']}")
-        return
+        return None, None
     print("Code executed successfully!")
     print(f"Output:\n{result['output']}")
     
     # Step 7 - Analyst Agent
     print("\nStep 7: Analyst Agent preparing insights...")
     analyst_prompt = get_analyst_prompt(user_query, result["output"], data_info)
-    analysis = ask_gemini(analyst_prompt)
+    analysis = ask_gemini(analyst_prompt, api_key)
     if analysis is None:
         print("Analyst Agent failed!")
-        return
+        return None, None
     
     print("\n" + "="*50)
     print("FINAL ANALYSIS")
     print("="*50)
     print(analysis)
     
-    # Check if chart was generated
     if os.path.exists("charts/result.png"):
         print("\nChart saved to: charts/result.png")
     
     print("\nPipeline completed successfully!")
-    return analysis
+    return analysis, data_info
 
 # Test run
 if __name__ == "__main__":
     csv_path = "titanic.csv"
     user_query = "Show me the survival rate by gender"
-    run_pipeline(csv_path, user_query)
+    api_key = os.getenv("GEMINI_API_KEY")
+    run_pipeline(csv_path, user_query, api_key)
