@@ -168,7 +168,7 @@ with tab1:
 
         if os.path.exists("charts/result.png"):
             st.markdown("### Generated Chart")
-            st.image("charts/result.png", use_column_width=True)
+            st.image("charts/result.png", width=700)
 
             with open("charts/result.png", "rb") as f:
                 st.download_button(
