@@ -39,3 +39,13 @@
 2026-03-19 22:02:49,338 - executor_agent - INFO - Temp file cleaned up!
 2026-03-19 22:02:49,339 - analyst_agent - INFO - Analyst prompt created for query: Show me the survival rate by gender
 2026-03-19 22:02:57,420 - app - INFO - Pipeline completed successfully!
+2026-03-21 22:51:39,407 - data_loader - INFO - CSV loaded successfully! Shape: (19775, 13)
+2026-03-21 22:51:39,493 - data_loader - INFO - Data cleaned successfully!
+2026-03-21 22:51:39,783 - data_loader - INFO - Data info extracted successfully!
+2026-03-21 22:51:39,784 - planner_agent - INFO - Planner prompt created for query: what is the average of customer in sales dats of garment wholesaler
+2026-03-21 22:51:53,905 - coder_agent - INFO - Coder prompt created for query: what is the average of customer in sales dats of garment wholesaler
+2026-03-21 22:52:17,310 - executor_agent - INFO - Code saved to temp_code.py
+2026-03-21 22:52:32,828 - executor_agent - INFO - Code executed successfully!
+2026-03-21 22:52:32,830 - executor_agent - INFO - Temp file cleaned up!
+2026-03-21 22:52:32,832 - analyst_agent - INFO - Analyst prompt created for query: what is the average of customer in sales dats of garment wholesaler
+2026-03-21 22:52:40,316 - app - INFO - Pipeline completed successfully!
