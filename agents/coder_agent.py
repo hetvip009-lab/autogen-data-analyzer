@@ -19,17 +19,46 @@ def get_coder_prompt(user_query, data_info, plan):
     
     Analysis Plan: {plan}
     
-    Your job is to:
-    1. Write clean Python code using Pandas and Matplotlib
-    2. Load the CSV file using: df = pd.read_csv('uploaded_file.csv')
-    3. Analyze the data based on the plan
-    4. Generate a chart and save it as 'charts/result.png'
-    5. Print a clear summary of the results
+    Your job is to write clean Python code that:
+    1. Loads the CSV file: df = pd.read_csv('uploaded_file.csv')
+    2. Analyzes the data based on the plan
+    3. Creates a comprehensive dashboard with multiple charts
+    4. Saves the final chart as 'charts/result.png'
+    5. Prints a clear summary of results
+    
+    IMPORTANT - Always create a multi-chart dashboard like this:
+    
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    import numpy as np
+    import os
+    
+    os.makedirs('charts', exist_ok=True)
+    df = pd.read_csv('uploaded_file.csv')
+    
+    fig = plt.figure(figsize=(16, 12))
+    fig.suptitle('Data Analysis Dashboard', fontsize=16, fontweight='bold')
+    
+    # Add these chart types based on the query:
+    # - Bar chart for comparisons
+    # - Pie chart for distributions
+    # - Donut chart for proportions
+    # - Line chart for trends
+    # - Histogram for distributions
+    # - KPI metrics boxes
+    # - Summary statistics
+    
+    plt.tight_layout()
+    plt.savefig('charts/result.png', dpi=150, bbox_inches='tight')
+    plt.close()
     
     Rules:
-    - Use only Pandas and Matplotlib
-    - Always save chart to 'charts/result.png'
-    - Always print results clearly
+    - Always create minimum 4 charts in one dashboard
+    - Always include KPI metrics boxes
+    - Always include a summary statistics box
+    - Always save to 'charts/result.png'
+    - Always print key findings
     - Handle errors with try/except
     - Write simple and clean code
     
