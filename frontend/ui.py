@@ -4,45 +4,46 @@ import os
 import pandas as pd
 from datetime import datetime
 
-# Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import run_pipeline
+from app import run_pipeline, get_api_key
 
-# Page configuration
 st.set_page_config(
     page_title="AutoGen Data Analyzer GPT",
     layout="wide"
 )
 
-# Initialize session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "analysis_results" not in st.session_state:
     st.session_state.analysis_results = []
 
-# Title
 st.title("AutoGen Data Analyzer GPT")
 st.markdown("An AI-powered data analysis system using multi-agent architecture")
 st.markdown("---")
 
-# Sidebar
 with st.sidebar:
     st.header("Configuration")
 
-    # API Key input
-    api_key = st.text_input(
-        "Enter Gemini API Key",
-        type="password",
-        placeholder="Paste your API key here"
-    )
+    # Check if API key exists in secrets
+    api_key = get_api_key()
 
     if api_key:
-        st.success("API Key entered!")
+        st.success("API Key configured!")
+        st.info("Ready to analyze your data!")
+    else:
+        st.warning("No API key found!")
+        manual_key = st.text_input(
+            "Enter Gemini API Key manually",
+            type="password",
+            placeholder="Paste your API key here"
+        )
+        if manual_key:
+            api_key = manual_key
+            st.success("API Key entered!")
 
     st.markdown("---")
 
-    # Query History
     st.header("Query History")
     if len(st.session_state.chat_history) == 0:
         st.info("No queries yet!")
@@ -59,16 +60,13 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### How to use")
-    st.markdown("1. Enter your Gemini API key")
-    st.markdown("2. Upload a CSV file")
-    st.markdown("3. Type your question")
-    st.markdown("4. Click Analyze button")
-    st.markdown("5. View results and charts")
+    st.markdown("1. Upload a CSV file")
+    st.markdown("2. Type your question")
+    st.markdown("3. Click Analyze button")
+    st.markdown("4. View results and charts")
 
-# Tabs
 tab1, tab2, tab3 = st.tabs(["Analysis", "Data Explorer", "About"])
 
-# Tab 1 - Analysis
 with tab1:
     col1, col2 = st.columns([1, 1])
 
@@ -88,7 +86,10 @@ with tab1:
             df = pd.read_csv("uploaded_file.csv")
             st.markdown("### Data Preview")
             st.dataframe(df.head(5))
-            st.markdown(f"Total rows: **{df.shape[0]}** | Total columns: **{df.shape[1]}**")
+            st.markdown(
+                f"Total rows: **{df.shape[0]}** | "
+                f"Total columns: **{df.shape[1]}**"
+            )
 
             st.download_button(
                 label="Download CSV",
@@ -126,14 +127,12 @@ with tab1:
 
         if analyze_btn:
             if not api_key:
-                st.error("Please enter your Gemini API key in the sidebar!")
+                st.error("No API key available!")
             elif uploaded_file is None:
                 st.error("Please upload a CSV file first!")
             elif not user_query:
                 st.error("Please type a question!")
             else:
-                os.environ["GEMINI_API_KEY"] = api_key
-
                 with st.spinner("Analyzing your data. Please wait..."):
                     try:
                         analysis, data_info = run_pipeline(
@@ -157,7 +156,6 @@ with tab1:
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
 
-    # Results
     if len(st.session_state.analysis_results) > 0:
         st.markdown("---")
         st.subheader("Analysis Results")
@@ -185,7 +183,6 @@ with tab1:
             mime="text/plain"
         )
 
-# Tab 2 - Data Explorer
 with tab2:
     st.subheader("Data Explorer")
 
@@ -203,7 +200,6 @@ with tab2:
             st.metric("Duplicate Rows", df.duplicated().sum())
 
         st.markdown("---")
-
         st.markdown("### Full Dataset")
         st.dataframe(df)
 
@@ -222,10 +218,8 @@ with tab2:
     else:
         st.info("Please upload a CSV file in the Analysis tab first!")
 
-# Tab 3 - About
 with tab3:
     st.subheader("About This Project")
-
     st.markdown("""
     ### AutoGen Data Analyzer GPT
 
@@ -255,6 +249,5 @@ with tab3:
     - Git/GitHub
     """)
 
-# Footer
 st.markdown("---")
 st.markdown("AutoGen Data Analyzer GPT | Built with Streamlit and Google Gemini")

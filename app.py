@@ -1,6 +1,7 @@
 from google import genai
 from dotenv import load_dotenv
 import os
+import streamlit as st
 from core.data_loader import load_csv, get_data_info, clean_data
 from agents.planner_agent import get_planner_prompt
 from agents.coder_agent import get_coder_prompt
@@ -12,6 +13,18 @@ from utils.logger import get_logger
 load_dotenv()
 
 logger = get_logger("app")
+
+def get_api_key():
+    """Get API key from Streamlit secrets or environment"""
+    try:
+        # First try Streamlit secrets (for deployed app)
+        return st.secrets["GEMINI_API_KEY"]
+    except:
+        try:
+            # Then try environment variable (for local)
+            return os.getenv("GEMINI_API_KEY")
+        except:
+            return None
 
 def ask_gemini(prompt, api_key):
     """Send prompt to Gemini and get response"""
@@ -26,8 +39,15 @@ def ask_gemini(prompt, api_key):
         logger.error(f"Gemini API error: {e}")
         raise Exception(f"Gemini API error: {str(e)}")
 
-def run_pipeline(csv_path, user_query, api_key, status_callback=None):
+def run_pipeline(csv_path, user_query, api_key=None, status_callback=None):
     """Run the complete agent pipeline"""
+
+    # Get API key automatically if not provided
+    if api_key is None:
+        api_key = get_api_key()
+
+    if api_key is None:
+        raise Exception("No API key found!")
 
     def update_status(message):
         if status_callback:
@@ -79,5 +99,4 @@ def run_pipeline(csv_path, user_query, api_key, status_callback=None):
 if __name__ == "__main__":
     csv_path = "titanic.csv"
     user_query = "Show me the survival rate by gender"
-    api_key = os.getenv("GEMINI_API_KEY")
-    run_pipeline(csv_path, user_query, api_key)
+    run_pipeline(csv_path, user_query)

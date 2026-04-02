@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 import pandas as pd
 import numpy as np
@@ -16,30 +15,43 @@ def multi_chart_analysis(df, title="Data Analysis Dashboard"):
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         cat_cols = df.select_dtypes(include=["object"]).columns
 
-        # Color scheme
-        PRIMARY = "#1a237e"
-        SECONDARY = "#283593"
-        ACCENT1 = "#0288d1"
-        ACCENT2 "#00897b"
-        ACCENT3 = "#f57c00"
-        ACCENT4 = "#c62828"
-        ACCENT5 = "#6a1b9a"
-        BG_DARK = "#0d1117"
-        BG_CARD = "#161b22"
-        TEXT_WHITE = "white"
-        TEXT_GRAY = "#8b949e"
+        # White background + dark bold colors
+        BG_MAIN   = "#ffffff"
+        BG_CARD   = "#ffffff"
+        BG_HEADER = "#1a237e"
+        COLOR1    = "#1a237e"   # dark navy blue
+        COLOR2    = "#1b5e20"   # dark green
+        COLOR3    = "#bf360c"   # dark orange red
+        COLOR4    = "#880e4f"   # dark pink
+        COLOR5    = "#4a148c"   # dark purple
+        COLOR6    = "#006064"   # dark teal
+        TEXT_DARK = "#212121"
+        TEXT_GRAY = "#616161"
+        TEXT_WHITE = "#ffffff"
+        GRID_COLOR = "#eeeeee"
 
-        fig = plt.figure(figsize=(20, 14), facecolor=BG_DARK)
-        fig.suptitle(title, fontsize=20, fontweight="bold",
-                    color=TEXT_WHITE, y=0.98)
+        CHART_COLORS = [COLOR1, COLOR2, COLOR3,
+                        COLOR4, COLOR5, COLOR6]
+
+        fig = plt.figure(figsize=(22, 15), facecolor=BG_MAIN)
+
+        # Title banner
+        fig.text(0.5, 0.97, title,
+                 ha="center", va="top",
+                 fontsize=22, fontweight="bold",
+                 color=TEXT_WHITE,
+                 bbox=dict(boxstyle="round,pad=0.4",
+                           facecolor=BG_HEADER,
+                           alpha=1.0))
 
         gs = gridspec.GridSpec(4, 4, figure=fig,
-                              hspace=0.45, wspace=0.35)
+                               hspace=0.5, wspace=0.35,
+                               top=0.92, bottom=0.04,
+                               left=0.05, right=0.97)
 
-        # KPI Cards Row
-        kpi_colors = [ACCENT1, ACCENT2, ACCENT3, ACCENT4]
-        kpi_labels = []
-        kpi_values = []
+        # ── KPI CARDS ──────────────────────────────────────────
+        kpi_colors = [COLOR1, COLOR2, COLOR3, COLOR4]
+        kpi_labels, kpi_values = [], []
 
         if len(numeric_cols) >= 4:
             for col in numeric_cols[:4]:
@@ -50,223 +62,264 @@ def multi_chart_analysis(df, title="Data Analysis Dashboard"):
                 kpi_labels.append(col)
                 kpi_values.append(df[col].mean())
             while len(kpi_labels) < 4:
-                kpi_labels.append("Count")
+                kpi_labels.append("Total Rows")
                 kpi_values.append(len(df))
+        else:
+            kpi_labels = ["Total Rows", "Columns",
+                          "Missing", "Duplicates"]
+            kpi_values = [len(df), df.shape[1],
+                          df.isnull().sum().sum(),
+                          df.duplicated().sum()]
 
         for i in range(4):
-            ax_kpi = fig.add_subplot(gs[0, i])
-            ax_kpi.set_facecolor(kpi_colors[i])
-            ax_kpi.set_xlim(0, 1)
-            ax_kpi.set_ylim(0, 1)
+            ax_k = fig.add_subplot(gs[0, i])
+            ax_k.set_facecolor(BG_CARD)
+            ax_k.set_xlim(0, 1)
+            ax_k.set_ylim(0, 1)
 
-            val = kpi_values[i] if i < len(kpi_values) else 0
-            if val >= 1000000:
-                display_val = f"{val/1000000:.2f}M"
-            elif val >= 1000:
-                display_val = f"{val/1000:.2f}K"
+            val = kpi_values[i]
+            if val >= 1_000_000:
+                dv = f"{val/1_000_000:.2f}M"
+            elif val >= 1_000:
+                dv = f"{val/1_000:.2f}K"
             else:
-                display_val = f"{val:.2f}"
+                dv = f"{val:.2f}"
 
-            ax_kpi.text(0.5, 0.62, display_val,
-                       transform=ax_kpi.transAxes,
-                       ha="center", va="center",
-                       fontsize=18, fontweight="bold",
-                       color=TEXT_WHITE)
-            ax_kpi.text(0.5, 0.28, kpi_labels[i] if i < len(kpi_labels) else "",
-                       transform=ax_kpi.transAxes,
-                       ha="center", va="center",
-                       fontsize=9, color=TEXT_WHITE, alpha=0.9)
-            ax_kpi.text(0.5, 0.1, "Average",
-                       transform=ax_kpi.transAxes,
-                       ha="center", va="center",
-                       fontsize=8, color=TEXT_WHITE, alpha=0.7)
-            ax_kpi.set_xticks([])
-            ax_kpi.set_yticks([])
-            for spine in ax_kpi.spines.values():
-                spine.set_visible(False)
+            # colored top bar
+            ax_k.axhspan(0.75, 1.0,
+                         facecolor=kpi_colors[i],
+                         alpha=1.0)
+            ax_k.text(0.5, 0.87, kpi_labels[i],
+                      transform=ax_k.transAxes,
+                      ha="center", va="center",
+                      fontsize=9, fontweight="bold",
+                      color=TEXT_WHITE)
+            ax_k.text(0.5, 0.47, dv,
+                      transform=ax_k.transAxes,
+                      ha="center", va="center",
+                      fontsize=22, fontweight="bold",
+                      color=kpi_colors[i])
+            ax_k.text(0.5, 0.15, "Average",
+                      transform=ax_k.transAxes,
+                      ha="center", va="center",
+                      fontsize=8, color=TEXT_GRAY)
+            ax_k.set_xticks([])
+            ax_k.set_yticks([])
+            for sp in ax_k.spines.values():
+                sp.set_edgecolor(kpi_colors[i])
+                sp.set_linewidth(2)
 
-        # Chart 1 - Bar Chart
+        # ── BAR CHART ──────────────────────────────────────────
         ax1 = fig.add_subplot(gs[1, :2])
         ax1.set_facecolor(BG_CARD)
         if len(numeric_cols) > 0 and len(cat_cols) > 0:
-            group_data = df.groupby(cat_cols[0])[numeric_cols[0]].mean()
-            colors_bar = plt.cm.Blues(
-                np.linspace(0.4, 0.9, len(group_data)))
-            bars = ax1.bar(group_data.index, group_data.values,
-                          color=colors_bar, edgecolor="none")
-            for bar in bars:
-                height = bar.get_height()
-                ax1.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.1f}',
-                        ha='center', va='bottom',
-                        fontsize=8, color=TEXT_WHITE)
-            ax1.set_title(f"{numeric_cols[0]} by {cat_cols[0]}",
-                         fontsize=11, fontweight="bold", color=TEXT_WHITE)
+            gd = df.groupby(
+                cat_cols[0])[numeric_cols[0]].mean()
+            bar_colors = [CHART_COLORS[i % len(CHART_COLORS)]
+                          for i in range(len(gd))]
+            bars = ax1.bar(gd.index, gd.values,
+                           color=bar_colors,
+                           edgecolor="white",
+                           width=0.6)
+            for b in bars:
+                h = b.get_height()
+                ax1.text(b.get_x() + b.get_width()/2, h,
+                         f"{h:.1f}",
+                         ha="center", va="bottom",
+                         fontsize=8, color=TEXT_DARK,
+                         fontweight="bold")
+            ax1.set_title(
+                f"{numeric_cols[0]} by {cat_cols[0]}",
+                fontsize=11, fontweight="bold",
+                color=TEXT_DARK, pad=8)
         elif len(numeric_cols) >= 2:
             means = df[numeric_cols[:6]].mean()
-            colors_bar = plt.cm.Blues(
-                np.linspace(0.4, 0.9, len(means)))
-            bars = ax1.bar(means.index, means.values,
-                          color=colors_bar, edgecolor="none")
-            ax1.set_title("Average Values", fontsize=11,
-                         fontweight="bold", color=TEXT_WHITE)
-        ax1.set_facecolor(BG_CARD)
-        ax1.tick_params(colors=TEXT_GRAY, rotation=30)
+            bar_colors = [CHART_COLORS[i % len(CHART_COLORS)]
+                          for i in range(len(means))]
+            ax1.bar(means.index, means.values,
+                    color=bar_colors, edgecolor="white")
+            ax1.set_title("Average Values by Column",
+                          fontsize=11, fontweight="bold",
+                          color=TEXT_DARK, pad=8)
+        ax1.tick_params(colors=TEXT_GRAY, rotation=30,
+                        labelsize=8)
         ax1.spines["top"].set_visible(False)
         ax1.spines["right"].set_visible(False)
-        ax1.spines["left"].set_color(TEXT_GRAY)
-        ax1.spines["bottom"].set_color(TEXT_GRAY)
-        ax1.yaxis.label.set_color(TEXT_GRAY)
+        ax1.spines["left"].set_color(GRID_COLOR)
+        ax1.spines["bottom"].set_color(GRID_COLOR)
+        ax1.yaxis.grid(True, color=GRID_COLOR, linewidth=0.8)
+        ax1.set_axisbelow(True)
 
-        # Chart 2 - Pie Chart
+        # ── PIE CHART ──────────────────────────────────────────
         ax2 = fig.add_subplot(gs[1, 2])
         ax2.set_facecolor(BG_CARD)
         if len(cat_cols) > 0:
             counts = df[cat_cols[0]].value_counts()[:5]
-            colors_pie = [ACCENT1, ACCENT2, ACCENT3, ACCENT4, ACCENT5]
-            wedges, texts, autotexts = ax2.pie(
+            ax2.pie(
                 counts,
                 labels=counts.index,
                 autopct="%1.1f%%",
-                colors=colors_pie[:len(counts)],
+                colors=CHART_COLORS[:len(counts)],
                 startangle=90,
-                pctdistance=0.8,
-                textprops={"color": TEXT_WHITE, "fontsize": 8}
+                pctdistance=0.78,
+                wedgeprops=dict(edgecolor="white",
+                                linewidth=2),
+                textprops={"color": TEXT_DARK,
+                           "fontsize": 8,
+                           "fontweight": "bold"}
             )
-            ax2.set_title(f"{cat_cols[0]} Distribution",
-                         fontsize=11, fontweight="bold", color=TEXT_WHITE)
+            ax2.set_title(f"{cat_cols[0]} — Pie",
+                          fontsize=11, fontweight="bold",
+                          color=TEXT_DARK, pad=8)
 
-        # Chart 3 - Donut Chart
+        # ── DONUT CHART ────────────────────────────────────────
         ax3 = fig.add_subplot(gs[1, 3])
         ax3.set_facecolor(BG_CARD)
-        if len(cat_cols) > 1:
-            counts = df[cat_cols[1]].value_counts()[:5]
-        elif len(cat_cols) > 0:
-            counts = df[cat_cols[0]].value_counts()[:5]
-        else:
-            counts = pd.Series([1], index=["No Data"])
-
-        colors_donut = [ACCENT3, ACCENT4, ACCENT1, ACCENT2, ACCENT5]
-        wedges, texts, autotexts = ax3.pie(
+        src_col = cat_cols[1] if len(cat_cols) > 1 else \
+                  cat_cols[0] if len(cat_cols) > 0 else None
+        counts = df[src_col].value_counts()[:5] \
+            if src_col else pd.Series([len(df)], index=["All"])
+        ax3.pie(
             counts,
             labels=counts.index,
             autopct="%1.1f%%",
-            colors=colors_donut[:len(counts)],
+            colors=CHART_COLORS[:len(counts)],
             startangle=90,
-            pctdistance=0.8,
-            wedgeprops=dict(width=0.55),
-            textprops={"color": TEXT_WHITE, "fontsize": 8}
+            pctdistance=0.78,
+            wedgeprops=dict(width=0.52,
+                            edgecolor="white",
+                            linewidth=2),
+            textprops={"color": TEXT_DARK,
+                       "fontsize": 8,
+                       "fontweight": "bold"}
         )
-        col_name = cat_cols[1] if len(cat_cols) > 1 else cat_cols[0] if len(cat_cols) > 0 else "Data"
-        ax3.set_title(f"{col_name} Donut",
-                     fontsize=11, fontweight="bold", color=TEXT_WHITE)
+        ax3.set_title(f"{src_col or 'Data'} — Donut",
+                      fontsize=11, fontweight="bold",
+                      color=TEXT_DARK, pad=8)
 
-        # Chart 4 - Line Chart
+        # ── LINE CHART ─────────────────────────────────────────
         ax4 = fig.add_subplot(gs[2, :2])
         ax4.set_facecolor(BG_CARD)
         if len(numeric_cols) > 0:
-            data_line = df[numeric_cols[0]].dropna()[:100]
-            x_vals = range(len(data_line))
-            ax4.plot(x_vals, data_line.values,
-                    color=ACCENT1, linewidth=2, alpha=0.9)
-            ax4.fill_between(x_vals, data_line.values,
-                            alpha=0.15, color=ACCENT1)
-            mean_val = data_line.mean()
-            ax4.axhline(mean_val, color=ACCENT3, linestyle="--",
-                       linewidth=1.5, label=f"Mean: {mean_val:.1f}")
+            dl = df[numeric_cols[0]].dropna()[:100]
+            xv = range(len(dl))
+            ax4.plot(xv, dl.values,
+                     color=COLOR1, linewidth=2.5)
+            ax4.fill_between(xv, dl.values,
+                             alpha=0.08, color=COLOR1)
+            mv = dl.mean()
+            ax4.axhline(mv, color=COLOR3,
+                        linestyle="--", linewidth=1.5,
+                        label=f"Mean: {mv:.1f}")
             ax4.legend(fontsize=8, facecolor=BG_CARD,
-                      labelcolor=TEXT_WHITE)
-            ax4.set_title(f"{numeric_cols[0]} Trend",
-                         fontsize=11, fontweight="bold", color=TEXT_WHITE)
-        ax4.tick_params(colors=TEXT_GRAY)
+                       labelcolor=TEXT_DARK,
+                       edgecolor=GRID_COLOR)
+            ax4.set_title(f"{numeric_cols[0]} — Trend",
+                          fontsize=11, fontweight="bold",
+                          color=TEXT_DARK, pad=8)
+        ax4.tick_params(colors=TEXT_GRAY, labelsize=8)
         ax4.spines["top"].set_visible(False)
         ax4.spines["right"].set_visible(False)
-        ax4.spines["left"].set_color(TEXT_GRAY)
-        ax4.spines["bottom"].set_color(TEXT_GRAY)
+        ax4.spines["left"].set_color(GRID_COLOR)
+        ax4.spines["bottom"].set_color(GRID_COLOR)
+        ax4.yaxis.grid(True, color=GRID_COLOR, linewidth=0.8)
+        ax4.set_axisbelow(True)
 
-        # Chart 5 - Histogram
+        # ── HISTOGRAM ──────────────────────────────────────────
         ax5 = fig.add_subplot(gs[2, 2:])
         ax5.set_facecolor(BG_CARD)
         if len(numeric_cols) > 0:
-            data_hist = df[numeric_cols[0]].dropna()
-            n, bins, patches = ax5.hist(data_hist, bins=20,
-                                        color=ACCENT2,
-                                        edgecolor="none", alpha=0.8)
-            for i, patch in enumerate(patches):
+            dh = df[numeric_cols[0]].dropna()
+            n, bins, patches = ax5.hist(
+                dh, bins=20,
+                edgecolor="white",
+                linewidth=0.8)
+            for idx, patch in enumerate(patches):
                 patch.set_facecolor(
-                    plt.cm.Blues(0.3 + 0.7 * i / len(patches)))
-            mean_val = data_hist.mean()
-            ax5.axvline(mean_val, color=ACCENT3, linestyle="--",
-                       linewidth=2, label=f"Mean: {mean_val:.1f}")
+                    CHART_COLORS[idx % len(CHART_COLORS)])
+            mv = dh.mean()
+            ax5.axvline(mv, color=COLOR3,
+                        linestyle="--", linewidth=2,
+                        label=f"Mean: {mv:.1f}")
             ax5.legend(fontsize=8, facecolor=BG_CARD,
-                      labelcolor=TEXT_WHITE)
-            ax5.set_title(f"{numeric_cols[0]} Distribution",
-                         fontsize=11, fontweight="bold", color=TEXT_WHITE)
-        ax5.tick_params(colors=TEXT_GRAY)
+                       labelcolor=TEXT_DARK,
+                       edgecolor=GRID_COLOR)
+            ax5.set_title(
+                f"{numeric_cols[0]} — Histogram",
+                fontsize=11, fontweight="bold",
+                color=TEXT_DARK, pad=8)
+        ax5.tick_params(colors=TEXT_GRAY, labelsize=8)
         ax5.spines["top"].set_visible(False)
         ax5.spines["right"].set_visible(False)
-        ax5.spines["left"].set_color(TEXT_GRAY)
-        ax5.spines["bottom"].set_color(TEXT_GRAY)
+        ax5.spines["left"].set_color(GRID_COLOR)
+        ax5.spines["bottom"].set_color(GRID_COLOR)
+        ax5.yaxis.grid(True, color=GRID_COLOR, linewidth=0.8)
+        ax5.set_axisbelow(True)
 
-        # Chart 6 - Summary Stats Box
+        # ── SUMMARY BOX ────────────────────────────────────────
         ax6 = fig.add_subplot(gs[3, :2])
         ax6.set_facecolor(BG_CARD)
-        summary_text = (
+        summary = (
             f"  DATASET SUMMARY\n\n"
-            f"  Total Rows         : {df.shape[0]}\n"
-            f"  Total Columns      : {df.shape[1]}\n"
-            f"  Numeric Columns    : {len(numeric_cols)}\n"
-            f"  Categorical Cols   : {len(cat_cols)}\n"
-            f"  Missing Values     : {df.isnull().sum().sum()}\n"
-            f"  Duplicate Rows     : {df.duplicated().sum()}"
+            f"  Total Rows         :  {df.shape[0]}\n"
+            f"  Total Columns      :  {df.shape[1]}\n"
+            f"  Numeric Columns    :  {len(numeric_cols)}\n"
+            f"  Categorical Cols   :  {len(cat_cols)}\n"
+            f"  Missing Values     :  {df.isnull().sum().sum()}\n"
+            f"  Duplicate Rows     :  {df.duplicated().sum()}"
         )
-        ax6.text(0.05, 0.5, summary_text,
-                transform=ax6.transAxes,
-                ha="left", va="center",
-                fontsize=11, color=TEXT_WHITE,
-                fontfamily="monospace",
-                bbox=dict(boxstyle="round,pad=0.5",
-                         facecolor=PRIMARY, alpha=0.8))
+        ax6.text(0.05, 0.5, summary,
+                 transform=ax6.transAxes,
+                 ha="left", va="center",
+                 fontsize=11, color=TEXT_DARK,
+                 fontfamily="monospace",
+                 bbox=dict(boxstyle="round,pad=0.6",
+                           facecolor="#e8eaf6",
+                           edgecolor=COLOR1,
+                           linewidth=2))
         ax6.axis("off")
         ax6.set_title("Dataset Summary",
-                     fontsize=11, fontweight="bold", color=TEXT_WHITE)
+                      fontsize=11, fontweight="bold",
+                      color=TEXT_DARK, pad=8)
 
-        # Chart 7 - Horizontal Bar Chart
+        # ── HORIZONTAL BAR ─────────────────────────────────────
         ax7 = fig.add_subplot(gs[3, 2:])
         ax7.set_facecolor(BG_CARD)
         if len(cat_cols) > 0:
             counts = df[cat_cols[0]].value_counts()[:6]
-            colors_h = plt.cm.Blues(
-                np.linspace(0.4, 0.9, len(counts)))
+            hb_colors = [CHART_COLORS[i % len(CHART_COLORS)]
+                         for i in range(len(counts))]
             bars = ax7.barh(counts.index, counts.values,
-                           color=colors_h, edgecolor="none")
-            for bar in bars:
-                width = bar.get_width()
-                ax7.text(width, bar.get_y() + bar.get_height()/2.,
-                        f' {width}',
-                        ha='left', va='center',
-                        fontsize=8, color=TEXT_WHITE)
+                            color=hb_colors,
+                            edgecolor="white",
+                            height=0.6)
+            for b in bars:
+                w = b.get_width()
+                ax7.text(w, b.get_y() + b.get_height()/2,
+                         f" {w}",
+                         ha="left", va="center",
+                         fontsize=8, color=TEXT_DARK,
+                         fontweight="bold")
             ax7.set_title(f"Count by {cat_cols[0]}",
-                         fontsize=11, fontweight="bold", color=TEXT_WHITE)
-        ax7.tick_params(colors=TEXT_GRAY)
+                          fontsize=11, fontweight="bold",
+                          color=TEXT_DARK, pad=8)
+        ax7.tick_params(colors=TEXT_GRAY, labelsize=8)
         ax7.spines["top"].set_visible(False)
         ax7.spines["right"].set_visible(False)
-        ax7.spines["left"].set_color(TEXT_GRAY)
-        ax7.spines["bottom"].set_color(TEXT_GRAY)
-
-        # Set all axes background
-        for ax in fig.get_axes():
-            ax.set_facecolor(BG_CARD)
-            ax.tick_params(colors=TEXT_GRAY)
+        ax7.spines["left"].set_color(GRID_COLOR)
+        ax7.spines["bottom"].set_color(GRID_COLOR)
+        ax7.xaxis.grid(True, color=GRID_COLOR, linewidth=0.8)
+        ax7.set_axisbelow(True)
 
         plt.savefig("charts/result.png", dpi=150,
-                   bbox_inches="tight", facecolor=BG_DARK)
+                    bbox_inches="tight",
+                    facecolor=BG_MAIN)
         plt.close()
-        logger.info("Attractive dashboard created successfully!")
+        logger.info("White dashboard created!")
         return "charts/result.png"
 
     except Exception as e:
-        logger.error(f"Error creating dashboard: {e}")
+        logger.error(f"Dashboard error: {e}")
         return None
 
 def bar_chart(df, x_col, y_col, title="Bar Chart"):
