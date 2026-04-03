@@ -8,7 +8,7 @@ def get_coder_prompt(user_query, data_info, plan):
     prompt = f"""
     You are a Python Data Analysis Coder Agent.
     
-    The user has uploaded a CSV file with the following information:
+    The user has uploaded a file with the following information:
     - Rows: {data_info['rows']}
     - Columns: {data_info['columns']}
     - Column Names: {data_info['column_names']}
@@ -26,11 +26,24 @@ def get_coder_prompt(user_query, data_info, plan):
     4. Saves the final chart as 'charts/result.png'
     5. Prints a clear summary of results
     
+    STRICT RULES — FOLLOW EXACTLY:
+    - ONLY use these libraries: pandas, matplotlib, numpy, os
+    - NEVER use nltk, sklearn, scipy, seaborn, plotly or any other library
+    - NEVER import any library not in the list above
+    - Always use: import pandas as pd
+    - Always use: import matplotlib.pyplot as plt
+    - Always use: import numpy as np
+    - Always use: import os
+    - Always save chart to 'charts/result.png'
+    - Always print results clearly
+    - Handle errors with try/except
+    - Write simple and clean code
+    - Always run: os.makedirs('charts', exist_ok=True)
+    
     IMPORTANT - Always create a multi-chart dashboard like this:
     
     import pandas as pd
     import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
     import numpy as np
     import os
     
@@ -40,27 +53,9 @@ def get_coder_prompt(user_query, data_info, plan):
     fig = plt.figure(figsize=(16, 12))
     fig.suptitle('Data Analysis Dashboard', fontsize=16, fontweight='bold')
     
-    # Add these chart types based on the query:
-    # - Bar chart for comparisons
-    # - Pie chart for distributions
-    # - Donut chart for proportions
-    # - Line chart for trends
-    # - Histogram for distributions
-    # - KPI metrics boxes
-    # - Summary statistics
-    
     plt.tight_layout()
     plt.savefig('charts/result.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    Rules:
-    - Always create minimum 4 charts in one dashboard
-    - Always include KPI metrics boxes
-    - Always include a summary statistics box
-    - Always save to 'charts/result.png'
-    - Always print key findings
-    - Handle errors with try/except
-    - Write simple and clean code
     
     Return ONLY the Python code, nothing else.
     """

@@ -1,22 +1,72 @@
 import pandas as pd
 import os
+import json
 from utils.logger import get_logger
 
 logger = get_logger("data_loader")
 
 def load_csv(file_path):
-    """Load CSV file and return dataframe"""
+    """Load any supported file and return dataframe"""
     try:
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             return None
-        
-        df = pd.read_csv(file_path)
-        logger.info(f"CSV loaded successfully! Shape: {df.shape}")
+
+        ext = os.path.splitext(file_path)[1].lower()
+
+        if ext == ".csv":
+            df = pd.read_csv(file_path)
+        elif ext in [".xlsx", ".xls"]:
+            df = pd.read_excel(file_path)
+        elif ext == ".json":
+            df = pd.read_json(file_path)
+        elif ext == ".tsv":
+            df = pd.read_csv(file_path, sep="\t")
+        elif ext == ".txt":
+            # Try tab separated first then comma
+            try:
+                df = pd.read_csv(file_path, sep="\t")
+            except:
+                df = pd.read_csv(file_path, sep=",")
+        elif ext == ".pdf":
+            df = read_pdf(file_path)
+        else:
+            df = pd.read_csv(file_path)
+
+        logger.info(f"File loaded successfully! Shape: {df.shape}")
         return df
 
     except Exception as e:
-        logger.error(f"Error loading CSV: {e}")
+        logger.error(f"Error loading file: {e}")
+        return None
+
+def read_pdf(file_path):
+    """Extract tables from PDF file"""
+    try:
+        import pdfplumber
+        tables = []
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                table = page.extract_table()
+                if table:
+                    df_page = pd.DataFrame(
+                        table[1:],
+                        columns=table[0]
+                    )
+                    tables.append(df_page)
+        if tables:
+            return pd.concat(tables, ignore_index=True)
+        else:
+            # If no tables found extract text
+            text_data = []
+            with pdfplumber.open(file_path) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if text:
+                        text_data.append({"text": text})
+            return pd.DataFrame(text_data)
+    except Exception as e:
+        logger.error(f"Error reading PDF: {e}")
         return None
 
 def get_data_info(df):
@@ -32,7 +82,6 @@ def get_data_info(df):
         }
         logger.info("Data info extracted successfully!")
         return info
-
     except Exception as e:
         logger.error(f"Error getting data info: {e}")
         return None
@@ -40,19 +89,14 @@ def get_data_info(df):
 def clean_data(df):
     """Basic data cleaning"""
     try:
-        # Remove duplicate rows
         df = df.drop_duplicates()
-        
-        # Fill missing values
         for col in df.columns:
             if df[col].dtype == "object":
                 df[col] = df[col].fillna("Unknown")
             else:
                 df[col] = df[col].fillna(df[col].mean())
-        
         logger.info("Data cleaned successfully!")
         return df
-
     except Exception as e:
         logger.error(f"Error cleaning data: {e}")
         return None
